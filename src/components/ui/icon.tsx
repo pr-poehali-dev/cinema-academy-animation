@@ -1,27 +1,43 @@
-import React from 'react';
-import * as LucideIcons from 'lucide-react';
-import { LucideProps } from 'lucide-react';
 
-interface IconProps extends LucideProps {
-  name: string;
-  fallback?: string;
+import React from "react";
+import { LucideProps } from "lucide-react";
+import dynamicIconImports from "lucide-react/dynamicIconImports";
+
+interface IconProps extends Omit<LucideProps, "ref"> {
+  name: keyof typeof dynamicIconImports | string;
+  fallback?: keyof typeof dynamicIconImports;
 }
 
-const Icon: React.FC<IconProps> = ({ name, fallback = 'CircleAlert', ...props }) => {
-  const IconComponent = (LucideIcons as Record<string, React.FC<LucideProps>>)[name];
+const Icon = ({ name, fallback = "CircleAlert", ...props }: IconProps) => {
+  const [icon, setIcon] = React.useState<React.FC<LucideProps>>();
 
-  if (!IconComponent) {
-    // Если иконка не найдена, используем fallback иконку
-    const FallbackIcon = (LucideIcons as Record<string, React.FC<LucideProps>>)[fallback];
+  React.useEffect(() => {
+    const loadIcon = async () => {
+      try {
+        const IconModule = await import(`lucide-react/dist/esm/icons/${name}.js`);
+        setIcon(() => IconModule.default);
+      } catch (error) {
+        if (fallback) {
+          try {
+            const FallbackIconModule = await import(`lucide-react/dist/esm/icons/${fallback}.js`);
+            setIcon(() => FallbackIconModule.default);
+          } catch (error) {
+            console.error(`Failed to load fallback icon "${fallback}"`, error);
+            setIcon(undefined);
+          }
+        } else {
+          console.error(`Failed to load icon "${name}"`, error);
+          setIcon(undefined);
+        }
+      }
+    };
 
-    // Если даже fallback не найден, возвращаем пустой span
-    if (!FallbackIcon) {
-      return <span className="text-xs text-gray-400">[icon]</span>;
-    }
+    loadIcon();
+  }, [name, fallback]);
 
-    return <FallbackIcon {...props} />;
-  }
+  if (!icon) return null;
 
+  const IconComponent = icon;
   return <IconComponent {...props} />;
 };
 
