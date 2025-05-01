@@ -1,58 +1,106 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import Icon from "@/components/ui/icon";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import { Link } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import Icon from "@/components/ui/icon"
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  
+const navItems = [
+  { name: "Главная", path: "/" },
+  { name: "О нас", path: "/about" },
+  { name: "Программы", path: "/programs" },
+  { name: "Преподаватели", path: "/teachers" },
+  { name: "Мероприятия", path: "/events" },
+  { name: "Контакты", path: "/contacts" },
+]
+
+interface NavbarProps {
+  className?: string
+}
+
+export function Navbar({ className }: NavbarProps) {
+  const [isScrolled, setIsScrolled] = React.useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">КиноАкадемия</span>
-            </Link>
+    <header 
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        isScrolled ? "bg-black/80 backdrop-blur-md py-2 shadow-lg" : "bg-transparent py-4",
+        className
+      )}
+    >
+      <div className="container mx-auto flex items-center justify-between">
+        <Link 
+          to="/" 
+          className="flex items-center space-x-2"
+        >
+          <div className="relative w-8 h-8">
+            <div className="absolute inset-0 bg-cinema rounded-full animate-pulse-light"></div>
+            <Icon 
+              name="Film" 
+              className="relative z-10 text-white" 
+              size={32} 
+            />
           </div>
-          
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-4">
-              <Link to="/" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Главная</Link>
-              <Link to="/courses" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Курсы</Link>
-              <Link to="/instructors" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Преподаватели</Link>
-              <Link to="/about" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">О нас</Link>
-              <Button className="bg-primary hover:bg-primary/90 text-white ml-3">Записаться</Button>
-            </div>
-          </div>
-          
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none"
-              aria-expanded="false"
+          <span className="text-xl font-bold tracking-tight">КиноАкадемия</span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary/50 transition-colors"
             >
-              <span className="sr-only">Открыть меню</span>
-              <Icon name={isOpen ? "X" : "Menu"} size={24} />
-            </button>
-          </div>
-        </div>
+              {item.name}
+            </Link>
+          ))}
+          <Button className="ml-4 bg-cinema hover:bg-cinema/80">
+            Поступить
+          </Button>
+        </nav>
+
+        {/* Mobile Menu Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <Icon name={isMobileMenuOpen ? "X" : "Menu"} />
+        </Button>
       </div>
 
-      {isOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background/95 backdrop-blur-lg">
-            <Link to="/" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Главная</Link>
-            <Link to="/courses" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Курсы</Link>
-            <Link to="/instructors" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Преподаватели</Link>
-            <Link to="/about" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">О нас</Link>
-            <Button className="bg-primary hover:bg-primary/90 text-white w-full mt-3">Записаться</Button>
+      {/* Mobile Navigation */}
+      {isMobileMenuOpen && (
+        <nav className="md:hidden px-4 pt-2 pb-4 bg-card/95 backdrop-blur-md animate-fade-in">
+          <div className="flex flex-col space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary/50 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+            <Button className="mt-2 bg-cinema hover:bg-cinema/80">
+              Поступить
+            </Button>
           </div>
-        </div>
+        </nav>
       )}
-    </nav>
-  );
-};
-
-export default Navbar;
+    </header>
+  )
+}

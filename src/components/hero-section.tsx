@@ -1,99 +1,142 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import Icon from "@/components/ui/icon"
 
-const HeroSection = () => {
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-  const [isLoaded, setIsLoaded] = useState(false);
-
+export function HeroSection() {
+  const heroRef = useRef<HTMLDivElement>(null)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  
   useEffect(() => {
-    setIsLoaded(true);
-    
     const handleMouseMove = (e: MouseEvent) => {
-      const x = -(window.innerWidth / 2 - e.pageX) / 50;
-      const y = (window.innerHeight / 2 - e.pageY) / 50;
-      setRotation({ x: y, y: x });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
+      if (!heroRef.current) return
+      
+      const rect = heroRef.current.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width
+      const y = (e.clientY - rect.top) / rect.height
+      
+      setMousePosition({ x, y })
+    }
+    
+    const heroEl = heroRef.current
+    if (heroEl) {
+      heroEl.addEventListener("mousemove", handleMouseMove)
+      
+      return () => {
+        heroEl.removeEventListener("mousemove", handleMouseMove)
+      }
+    }
+  }, [])
+  
+  const calculateTransform = (depth: number) => {
+    const moveX = (mousePosition.x - 0.5) * depth
+    const moveY = (mousePosition.y - 0.5) * depth
+    return `translate3d(${moveX}px, ${moveY}px, 0)`
+  }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden py-20 md:py-0">
-      {/* Анимированный фон */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-background to-background/50"></div>
-        <div className="absolute top-20 right-20 w-72 h-72 bg-primary/20 rounded-full filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute bottom-20 left-20 w-72 h-72 bg-purple-600/20 rounded-full filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-40 right-40 w-72 h-72 bg-blue-600/20 rounded-full filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+    <div 
+      ref={heroRef}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden perspective"
+    >
+      {/* Градиентный фон */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-black/70"></div>
+      
+      {/* Вращающиеся сферы */}
+      <div className="absolute w-full h-full overflow-hidden">
+        <div 
+          className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full bg-cinema/20 animate-blob blur-3xl"
+          style={{ transform: calculateTransform(-20) }}
+        ></div>
+        <div 
+          className="absolute bottom-1/4 left-1/3 w-80 h-80 rounded-full bg-accent/10 animate-blob animation-delay-2000 blur-3xl"
+          style={{ transform: calculateTransform(-30) }}
+        ></div>
+        <div 
+          className="absolute top-1/3 left-1/4 w-72 h-72 rounded-full bg-primary/10 animate-blob animation-delay-4000 blur-3xl"
+          style={{ transform: calculateTransform(-25) }}
+        ></div>
       </div>
-
-      <div className="container px-4 md:px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className={`space-y-8 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
-            <div>
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent tracking-tight">
-                Стань профессионалом киноиндустрии
-              </h1>
-              <p className="mt-4 text-lg text-gray-400 max-w-md">
-                Обучение от признанных мастеров индустрии с индивидуальным подходом и практикой на реальных проектах
-              </p>
-            </div>
+      
+      {/* Контент */}
+      <div className="container relative z-10 mx-auto px-4 py-32 flex flex-col md:flex-row items-center">
+        <div className="md:w-1/2 mb-12 md:mb-0 md:pr-12">
+          <div className="animate-fade-in" style={{animationDelay: "0.2s"}}>
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-glow">
+              Искусство 
+              <span className="text-cinema"> кинематографа</span>
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 text-foreground/80">
+              Откройте для себя мир кино вместе с Киноакадемией. Практические занятия, опытные преподаватели и современное оборудование.
+            </p>
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
-                Начать обучение
+              <Button className="bg-cinema hover:bg-cinema/80 text-white">
+                Наши программы
+                <Icon name="ArrowRight" className="ml-2 h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10">
-                Наши курсы
+              <Button variant="outline" className="border-cinema/50 text-foreground hover:bg-cinema/10">
+                <Icon name="Play" className="mr-2 h-4 w-4" />
+                Смотреть видео
               </Button>
-            </div>
-            <div className="flex items-center space-x-4 text-sm">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-gray-600 border-2 border-background"></div>
-                ))}
-              </div>
-              <p className="text-gray-400">500+ выпускников уже в киноиндустрии</p>
-            </div>
-          </div>
-
-          <div className={`flex justify-center ${isLoaded ? 'animate-fade-in animation-delay-300' : 'opacity-0'}`}>
-            <div 
-              className="relative w-full max-w-lg aspect-[4/3] bg-gradient-to-r from-primary/20 to-purple-600/20 rounded-lg p-1"
-              style={{
-                transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-                transition: 'transform 0.1s ease-out'
-              }}
-            >
-              <div className="absolute inset-0 rounded-lg overflow-hidden bg-zinc-900 backdrop-blur-sm border border-white/10">
-                <div className="absolute top-2 left-2 right-2 h-6 bg-zinc-800 rounded flex items-center px-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  </div>
-                </div>
-                <div className="mt-8 p-4">
-                  <div className="h-4 bg-zinc-700 rounded w-3/4 mb-3"></div>
-                  <div className="h-3 bg-zinc-700 rounded w-1/2 mb-3"></div>
-                  <div className="h-40 bg-zinc-800 rounded mt-4 flex items-center justify-center">
-                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-4">
-                    <div className="h-12 bg-zinc-700 rounded"></div>
-                    <div className="h-12 bg-primary/30 rounded"></div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
+        
+        {/* 3D элемент */}
+        <div 
+          className="md:w-1/2 perspective"
+          style={{animationDelay: "0.5s"}}
+        >
+          <div 
+            className="relative w-full max-w-md mx-auto preserve-3d"
+            style={{ 
+              transformStyle: "preserve-3d",
+              transform: `rotateY(${mousePosition.x * 20 - 10}deg) rotateX(${mousePosition.y * -20 + 10}deg)`,
+              transition: "transform 0.1s ease-out"
+            }}
+          >
+            {/* Передняя панель */}
+            <div className="relative w-full aspect-[3/4] rounded-xl glass-effect p-4 animate-fade-in shadow-2xl">
+              <img 
+                src="https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=1000&auto=format&fit=crop" 
+                alt="Киносъемка" 
+                className="rounded-md w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-md"></div>
+              <div className="absolute bottom-0 left-0 p-6">
+                <div className="flex items-center mb-2">
+                  <div className="w-3 h-3 rounded-full bg-cinema mr-2 animate-pulse"></div>
+                  <span className="text-xs uppercase tracking-wider">Актерское мастерство</span>
+                </div>
+                <h3 className="text-xl font-bold">Летний интенсив</h3>
+                <p className="text-sm text-muted-foreground mt-1">Двухнедельный курс от ведущих актеров и режиссеров</p>
+              </div>
+            </div>
+            
+            {/* 3D эффекты глубины */}
+            <div 
+              className="absolute inset-0 rounded-xl border border-white/20"
+              style={{ transform: "translateZ(-10px)", filter: "blur(2px)" }}
+            ></div>
+            <div 
+              className="absolute inset-0 rounded-xl bg-cinema/5"
+              style={{ transform: "translateZ(-20px)", filter: "blur(4px)" }}
+            ></div>
+            <div 
+              className="absolute inset-0 rounded-xl bg-cinema/5"
+              style={{ transform: "translateZ(-30px)", filter: "blur(6px)" }}
+            ></div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Скролл индикатор */}
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-float">
+        <div className="flex flex-col items-center">
+          <span className="text-sm text-foreground/60 mb-2">Прокрутите вниз</span>
+          <Icon name="ChevronDown" className="animate-bounce text-foreground/60" />
+        </div>
       </div>
     </div>
-  );
-};
-
-export default HeroSection;
+  )
+}

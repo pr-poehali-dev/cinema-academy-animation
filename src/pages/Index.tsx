@@ -1,37 +1,22 @@
 
-import Navbar from "@/components/ui/navbar";
-import HeroSection from "@/components/hero-section";
-import FeaturesSection from "@/components/features-section";
-import { useState, useEffect } from "react";
+import { HeroSection } from "@/components/hero-section"
+import { FeaturesSection } from "@/components/features-section"
+import { ProgramsSection } from "@/components/programs-section"
+import { TestimonialsSection } from "@/components/testimonials-section"
+import { Footer } from "@/components/footer"
+import { Navbar } from "@/components/ui/navbar"
 
-const Index = () => {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Имитация загрузки контента
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
+export default function Index() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main>
+      <main className="flex-1">
         <HeroSection />
         <FeaturesSection />
+        <ProgramsSection />
+        <TestimonialsSection />
       </main>
+      <Footer />
     </div>
-  );
-};
-
-export default Index;
+  )
+}

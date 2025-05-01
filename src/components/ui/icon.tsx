@@ -1,44 +1,36 @@
 
-import React from "react";
-import { LucideProps } from "lucide-react";
-import dynamicIconImports from "lucide-react/dynamicIconImports";
+import * as React from "react"
+import { icons } from "lucide-react"
 
-interface IconProps extends Omit<LucideProps, "ref"> {
-  name: keyof typeof dynamicIconImports | string;
-  fallback?: keyof typeof dynamicIconImports;
+interface IconProps extends React.SVGProps<SVGSVGElement> {
+  name: string
+  size?: number | string
+  fallback?: string
+  color?: string
+  className?: string
 }
 
-const Icon = ({ name, fallback = "CircleAlert", ...props }: IconProps) => {
-  const [icon, setIcon] = React.useState<React.FC<LucideProps>>();
+const Icon = React.forwardRef<SVGSVGElement, IconProps>(
+  ({ name, fallback, color, size = 24, className = "", ...props }, ref) => {
+    const LucideIcon = icons[name as keyof typeof icons] || (fallback ? icons[fallback as keyof typeof icons] : null)
 
-  React.useEffect(() => {
-    const loadIcon = async () => {
-      try {
-        const IconModule = await import(`lucide-react/dist/esm/icons/${name}.js`);
-        setIcon(() => IconModule.default);
-      } catch (error) {
-        if (fallback) {
-          try {
-            const FallbackIconModule = await import(`lucide-react/dist/esm/icons/${fallback}.js`);
-            setIcon(() => FallbackIconModule.default);
-          } catch (error) {
-            console.error(`Failed to load fallback icon "${fallback}"`, error);
-            setIcon(undefined);
-          }
-        } else {
-          console.error(`Failed to load icon "${name}"`, error);
-          setIcon(undefined);
-        }
-      }
-    };
+    if (!LucideIcon) {
+      console.warn(`Icon "${name}" not found and no fallback provided`)
+      return null
+    }
 
-    loadIcon();
-  }, [name, fallback]);
+    return (
+      <LucideIcon
+        ref={ref}
+        color={color}
+        size={size}
+        className={className}
+        {...props}
+      />
+    )
+  }
+)
 
-  if (!icon) return null;
+Icon.displayName = "Icon"
 
-  const IconComponent = icon;
-  return <IconComponent {...props} />;
-};
-
-export default Icon;
+export default Icon
